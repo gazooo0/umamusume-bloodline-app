@@ -108,7 +108,7 @@ def analyze_race(race_id):
     return result
 
 # === UI ===
-st.title("📅JRA開催選択＋ウマ娘血統照合（競馬場・12Rボタン対応）")
+st.title("ウマ娘血統の馬🏇サーチ（最新1か月間対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 
@@ -124,11 +124,11 @@ schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 
 # 📅 日付選択（最新が上）
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
-selected_date = st.selectbox("開催日を選択", dates)
+selected_date = st.selectbox("競馬開催日を選択してください（過去31日まで遡れます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
 # 🏇 競馬場選択（ボタン形式）
-st.markdown("### 🏟️ 競馬場を選択")
+st.markdown("### 🏟️ 競馬場を選択してください。")
 place_codes = {"札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
                "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
 available_places = sorted(data_filtered["競馬場"].unique())
@@ -143,7 +143,7 @@ if not place:
     st.stop()
 
 # 🏁 レース番号ボタン
-st.markdown("### 🏁 レース番号を選択")
+st.markdown("### 🏁 レース番号を選択してください。")
 cols = st.columns(6)
 if "race_num_int" not in st.session_state:
     st.session_state.race_num_int = None
@@ -162,7 +162,7 @@ race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
 st.markdown(f"🔢 **race_id**: `{race_id}`")
 
 # 実行ボタン
-if st.button("🧬 血統照合を開始"):
+if st.button("🏇 ウマ娘血統のお馬さんサーチを開始します"):
     with st.spinner("照合中..."):
         results = analyze_race(race_id)
         st.success("照合完了！")
@@ -170,7 +170,7 @@ if st.button("🧬 血統照合を開始"):
         if not results:
             st.warning("出走馬が見つかりませんでした。")
         else:
-            st.markdown("### 🧬 ウマ娘血統照合結果")
+            st.markdown("### 🧬 ウマ娘血統サーチ結果")
             for idx, row in enumerate(results):
                 st.markdown(f"""
 <div style='font-size:20px; font-weight:bold;'>{idx+1}. {row['馬名']}</div>
