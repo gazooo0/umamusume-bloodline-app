@@ -108,7 +108,7 @@ def analyze_race(race_id):
     return result
 
 # === UI ===
-st.title("ウマ娘血統の馬🏇サーチ（最新1か月間対応）")
+st.title("ウマ娘血統の馬🏇サーチ<br>（最新1か月間対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 
