@@ -146,14 +146,18 @@ if not place:
 
 # 🏁 レース番号ボタン
 st.markdown("### 🏁 レース番号を選択してください。")
-cols = st.columns(6)  # 6列に分けて表示
+
+num_cols = 6
+cols = st.columns(num_cols)
 
 if "race_num_int" not in st.session_state:
     st.session_state.race_num_int = None
 
 for i in range(12):
-    if cols[i % 6].button(f"{i+1}R"):
-        st.session_state.race_num_int = i + 1
+    col_index = i % num_cols
+    if col_index < len(cols):  # 念のためチェック
+        if cols[col_index].button(f"{i+1}R"):
+            st.session_state.race_num_int = i + 1
 
 race_num_int = st.session_state.race_num_int
 if not race_num_int:
