@@ -35,7 +35,7 @@ def generate_position_labels():
     return dfs("", 0, 5)[1:]
 POSITION_LABELS = generate_position_labels()
 
-# === 馬リンク取得（requests版） ===
+# === 馬リンク取得 ===
 def get_horse_links(race_id):
     url = f"https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
     res = requests.get(url, headers=HEADERS)
@@ -104,7 +104,7 @@ st.title("📅JRA開催選択＋ウマ娘血統照合（競馬場・12Rボタン
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 
-# ✅ 日付整形の修正ポイント（ここ）
+# ✅ 日付整形
 schedule_df["日付"] = pd.to_datetime(
     schedule_df["年"].astype(str) + "/" + schedule_df["月日(曜日)"].str.extract(r"(\d{2}/\d{2})")[0],
     format="%Y/%m/%d"
