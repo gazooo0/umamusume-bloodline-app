@@ -125,7 +125,8 @@ schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 
 # 📅 日付選択（最新が上）
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
-selected_date = st.selectbox("競馬開催日を選択してください（過去31日まで遡れます。）", dates)
+st.markdown("### 📅 競馬開催日を選択してください")
+selected_date = st.selectbox("（過去31日まで遡れます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
 # 🏇 競馬場選択（ボタン形式）
