@@ -3,14 +3,10 @@ import pandas as pd
 import unicodedata
 import re
 import time
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 import requests
 
 # === 設定 ===
-CHROMEDRIVER_PATH = "D:/PythonK/chromedriver.exe"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 # === ウマ娘血統リスト ===
@@ -39,16 +35,12 @@ def generate_position_labels():
     return dfs("", 0, 5)[1:]
 POSITION_LABELS = generate_position_labels()
 
-# === 馬リンク取得 ===
+# === 馬リンク取得（requests版） ===
 def get_horse_links(race_id):
     url = f"https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
-    options = Options()
-    options.add_argument('--headless')
-    driver = webdriver.Chrome(service=Service(CHROMEDRIVER_PATH), options=options)
-    driver.get(url)
-    time.sleep(3)
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    driver.quit()
+    res = requests.get(url, headers=HEADERS)
+    res.encoding = "EUC-JP"
+    soup = BeautifulSoup(res.text, "html.parser")
 
     horse_links = {}
     tables = soup.find_all("table", class_="RaceTable01")
@@ -111,9 +103,15 @@ def analyze_race(race_id):
 st.title("📅JRA開催選択＋ウマ娘血統照合（競馬場・12Rボタン対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
+
+# ✅ 日付整形の修正ポイント（ここ）
+schedule_df["日付"] = pd.to_datetime(
+    schedule_df["年"].astype(str) + "/" + schedule_df["月日(曜日)"].str.extract(r"(\d{2}/\d{2})")[0],
+    format="%Y/%m/%d"
+)
+
 today = pd.Timestamp.today()
 past_31 = today - pd.Timedelta(days=31)
-schedule_df["日付"] = pd.to_datetime(schedule_df["年"].astype(str) + schedule_df["月日(曜日)"].str[:5], format="%Y%m/%d")
 schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 
 # 📅 日付選択（最新が上）
@@ -124,7 +122,7 @@ data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == sel
 # 🏇 競馬場選択（ボタン形式）
 st.markdown("### 🏟️ 競馬場を選択")
 place_codes = {"札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
-                "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
+               "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
 available_places = sorted(data_filtered["競馬場"].unique())
 cols = st.columns(5)
 if "place" not in st.session_state:
