@@ -146,7 +146,7 @@ if not place:
 
 # 🏁 レース番号ボタン
 st.markdown("### 🏁 レース番号を選択してください。")
-cols = st.columns(6)
+cols = st.columns(3)
 if "race_num_int" not in st.session_state:
     st.session_state.race_num_int = None
 for i in range(12):
