@@ -9,30 +9,13 @@ import requests
 # === 設定 ===
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
-# === ウマ娘血統 ===
-# === ウマ娘血統 ===
-umamusume_bloodlines = {"アーモンドアイ", "アイネスフウジン", "アグネスタキオン", "アグネスデジタル", "アストンマーチャン", "アドマイヤベガ", "イクノディクタス", "イナリワン",
-    "ウイニングチケット", "ヴィブロス", "ヴィルシーナ", "ウインバリアシオン", "ウオッカ", "エアグルーヴ", "エアシャカール", "エアメサイア",
-    "エイシンフラッシュ", "エスポワールシチー", "エルコンドルパサー", "オグリキャップ", "オルフェーヴル", "カツラギエース", "カルストンライトオ",
-    "カレンチャン", "カレンブーケドール", "カワカミプリンセス", "キタサンブラック", "キングヘイロー", "グラスワンダー", "グランアレグリア",
-    "クロノジェネシス", "ケイエスミラクル", "ゴールドシチー", "ゴールドシップ", "コパノリッキー", "サイレンススズカ", "サウンズオブアース",
-    "サクラチトセオー", "サクラチヨノオー", "サクラバクシンオー", "サクラローレル", "サトノクラウン", "サトノダイヤモンド", "サムソンビッグ",
-    "シーキングザパール", "シーザリオ", "ジェンティルドンナ", "ジャングルポケット", "シュヴァルグラン", "シリウスシンボリ", "シンコウウインディ",
-    "シンボリクリスエス", "シンボリルドルフ", "スイープトウショウ", "スーパークリーク", "ステイゴールド", "スティルインラブ", "スペシャルウィーク",
-    "スマートファルコン", "セイウンスカイ", "ゼンノロブロイ", "ダイイチルビー", "タイキシャトル", "ダイタクヘリオス", "ダイワスカーレット",
-    "タップダンスシチー", "タニノギムレット", "タマモクロス", "ダンツフレーム", "ツインターボ", "ツルマルツヨシ", "デアリングタクト",
-    "デアリングハート", "テイエムオペラオー", "デュランダル", "トウカイテイオー", "ドゥラメンテ", "トーセンジョーダン", "トランセンド",
-    "ドリームジャーニー", "ナイスネイチャ", "ナカヤマフェスタ", "ナリタタイシン", "ナリタトップロード", "ナリタブライアン", "ニシノフラワー",
-    "ネオユニヴァース", "ノースフライト", "ノーリーズン", "バブルガムフェロー", "ハルウララ", "バンブーメモリー", "ビコーペガサス",
-    "ヒシアケボノ", "ヒシアマゾン", "ヒシミラクル", "ビリーヴ", "ビワハヤヒデ", "ファインモーション", "ブエナビスタ", "フェノーメノ",
-    "フサイチパンドラ", "フジキセキ", "ブラストワンピース", "フリオーソ", "ホッコータルマエ", "マーベラスサンデー", "マチカネタンホイザ",
-    "マチカネフクキタル", "マヤノトップガン", "マルゼンスキー", "マンハッタンカフェ", "ミスターシービー", "ミホノブルボン",
-    "メイショウドトウ", "メジロアルダン", "メジロドーベル", "メジロパーマー", "メジロブライト", "メジロマックイーン", "メジロライアン",
-    "メジロラモーヌ", "ヤエノムテキ", "ヤマニンゼファー", "ユキノビジン", "ライスシャワー", "ラインクラフト", "ラヴズオンリーユー",
-    "ラッキーライラック", "ロイスアンドロイス", "ワンダーアキュート"
-}
+# === ウマ娘血統データの読み込み ===
+umamusume_df = pd.read_csv("umamusume.csv")
+image_dict = dict(zip(umamusume_df["kettou"], umamusume_df["url"]))
+umamusume_bloodlines = set(umamusume_df["kettou"].dropna().astype(str))
 normalized_umamusume = {unicodedata.normalize("NFKC", n).strip().lower() for n in umamusume_bloodlines}
 
+# === 血統位置ラベル ===
 def generate_position_labels():
     def dfs(pos, depth, max_depth):
         if depth > max_depth: return []
@@ -43,6 +26,7 @@ def generate_position_labels():
     return dfs("", 0, 5)[1:]
 POSITION_LABELS = generate_position_labels()
 
+# === 出走馬リンク取得 ===
 def get_horse_links(race_id):
     url = f"https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
     res = requests.get(url, headers=HEADERS)
@@ -59,6 +43,7 @@ def get_horse_links(race_id):
                     horse_links[name] = full_url
     return horse_links
 
+# === 血統取得 ===
 def get_pedigree_with_positions(horse_url):
     horse_id = horse_url.rstrip("/").split("/")[-1]
     ped_url = f"https://db.netkeiba.com/horse/ped/{horse_id}/"
@@ -77,40 +62,26 @@ def get_pedigree_with_positions(horse_url):
             names[label] = a.text.strip()
     return names
 
+# === 照合処理 ===
 def match_umamusume(pedigree_dict):
-    return [f"【{pos}】{name}" for pos, name in pedigree_dict.items()
-            if unicodedata.normalize("NFKC", name).strip().lower() in normalized_umamusume]
-
-def analyze_race(race_id):
-    horse_links = get_horse_links(race_id)
-    st.text(f"🐎 出走馬数: {len(horse_links)}頭")
-
-    result = []
-    for idx, (name, link) in enumerate(horse_links.items(), 1):
-        with st.spinner(f"{idx}頭目：{name} を照合中..."):
-            try:
-                pedigree = get_pedigree_with_positions(link)
-                matches = match_umamusume(pedigree)
-                result.append({
-                    "馬名": name,
-                    "該当血統数": len(matches),
-                    "ウマ娘血統": "\n".join(matches)
-                })
-            except Exception as e:
-                result.append({
-                    "馬名": name,
-                    "該当血統数": "取得失敗",
-                    "ウマ娘血統": str(e)
-                })
-            time.sleep(1.5)
-    return result
+    matched = []
+    for pos, name in pedigree_dict.items():
+        key = unicodedata.normalize("NFKC", name).strip().lower()
+        if key in normalized_umamusume:
+            img_url = image_dict.get(name, "")
+            if img_url:
+                matched.append(
+                    f"<img src='{img_url}' width='100' style='vertical-align:middle;margin-right:8px;'>【{pos}】{name}"
+                )
+            else:
+                matched.append(f"【{pos}】{name}")
+    return matched
 
 # === UI ===
-st.title("🏇ウマ娘血統サーチ")
+st.title("ウマ娘血統の馬🐎サーチ")
+st.markdown("### （最新1か月間対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
-
-# 日付整形
 schedule_df["日付"] = pd.to_datetime(
     schedule_df["年"].astype(str) + "/" + schedule_df["月日(曜日)"].str.extract(r"(\d{2}/\d{2})")[0],
     format="%Y/%m/%d"
@@ -120,14 +91,12 @@ today = pd.Timestamp.today()
 past_31 = today - pd.Timedelta(days=31)
 schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 
-# 📅 日付選択（最新が上）
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
-st.markdown("### 📅 競馬開催日を選択")
-selected_date = st.selectbox("（直近30日前後の開催レースまで遡れます。）", dates)
+st.markdown("### 📅 競馬開催日を選択してください")
+selected_date = st.selectbox("（過去31日まで遡れます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
-# 🏇 競馬場選択（ボタン形式）
-st.markdown("### 🏟️ 競馬場を選択。")
+st.markdown("### 🏟️ 競馬場を選択してください。")
 place_codes = {"札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
                "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
 available_places = sorted(data_filtered["競馬場"].unique())
@@ -141,10 +110,8 @@ place = st.session_state.place
 if not place:
     st.stop()
 
-# 🏁 レース番号を選択（プルダウン形式）
-st.markdown("### 🏁 レース番号を選択。")
+st.markdown("### 🏁 レース番号を選択してください。")
 race_num_int = st.selectbox("レース番号を選んでください", list(range(1, 13)), format_func=lambda x: f"{x}R")
-
 if not race_num_int:
     st.stop()
 
@@ -155,22 +122,22 @@ dd = f"{int(selected_row['日目']):02d}"
 race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
 st.markdown(f"🔢 **race_id**: `{race_id}`")
 
-# 実行ボタン
-if st.button("🏇 ウマ娘血統のお馬さんサーチ開始！"):
-    with st.spinner("照合中..."):
-        results = analyze_race(race_id)
-        st.success("照合完了！")
+# === 照合実行 ===
+if st.button("🏇 ウマ娘血統のお馬さんサーチを開始します"):
+    horse_links = get_horse_links(race_id)
+    st.markdown(f"🐎 出走馬数: {len(horse_links)}頭")
 
-        if not results:
-            st.warning("出走馬が見つかりませんでした。")
-        else:
-            st.markdown("### 🧬 ウマ娘血統サーチ結果")
-            for idx, row in enumerate(results):
+    for idx, (name, link) in enumerate(horse_links.items(), 1):
+        with st.spinner(f"{idx}頭目：{name} を照合中..."):
+            try:
+                pedigree = get_pedigree_with_positions(link)
+                matches = match_umamusume(pedigree)
                 st.markdown(f"""
-<div style='font-size:20px; font-weight:bold;'>{idx+1}. {row['馬名']}</div>
-
-該当血統数：{row['該当血統数']}  
-{row['ウマ娘血統']}
+<div style='font-size:20px; font-weight:bold;'>{idx}. {name}</div>
+該当血統数：{len(matches)}<br>
+{ "<br>".join(matches) if matches else "該当なし" }
 """, unsafe_allow_html=True)
-                if idx < len(results) - 1:
-                    st.markdown("<hr style='border:1px solid #ccc;'>", unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"{name} の照合中にエラーが発生しました：{e}")
+        st.markdown("---")
+        time.sleep(1.2)
