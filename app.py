@@ -79,7 +79,6 @@ def match_umamusume(pedigree_dict):
 
 # === UI ===
 st.title("ウマ娘血統の馬🐎サーチ")
-st.markdown("### （最新1か月間対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 schedule_df["日付"] = pd.to_datetime(
@@ -92,11 +91,11 @@ past_31 = today - pd.Timedelta(days=31)
 schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
-st.markdown("### 📅 競馬開催日を選択してください")
-selected_date = st.selectbox("（過去31日まで遡れます。）", dates)
+st.markdown("### 📅 競馬開催日を選択")
+selected_date = st.selectbox("（直近30日前後の開催まで遡って表示できます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
-st.markdown("### 🏟️ 競馬場を選択してください。")
+st.markdown("### 🏟️ 競馬場を選択。")
 place_codes = {"札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
                "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
 available_places = sorted(data_filtered["競馬場"].unique())
@@ -110,7 +109,7 @@ place = st.session_state.place
 if not place:
     st.stop()
 
-st.markdown("### 🏁 レース番号を選択してください。")
+st.markdown("### 🏁 レース番号を選択。")
 race_num_int = st.selectbox("レース番号を選んでください", list(range(1, 13)), format_func=lambda x: f"{x}R")
 if not race_num_int:
     st.stop()
@@ -123,7 +122,7 @@ race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
 st.markdown(f"🔢 **race_id**: `{race_id}`")
 
 # === 照合実行 ===
-if st.button("🏇 ウマ娘血統のお馬さんサーチを開始します"):
+if st.button("🔍ウマ娘血統の馬サーチを開始"):
     horse_links = get_horse_links(race_id)
     st.markdown(f"🐎 出走馬数: {len(horse_links)}頭")
 
