@@ -95,7 +95,7 @@ st.markdown("### 📅 競馬開催日を選択")
 selected_date = st.selectbox("（直近30日前後の開催まで遡って表示できます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
-st.markdown("### 🏟️ 競馬場を選択。")
+st.markdown("### 🏟️ 競馬場を選択")
 place_codes = {"札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
                "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10"}
 available_places = sorted(data_filtered["競馬場"].unique())
@@ -109,8 +109,10 @@ place = st.session_state.place
 if not place:
     st.stop()
 
-st.markdown("### 🏁 レース番号を選択。")
+st.markdown("### 🏁 レース番号を選択")
 race_num_int = st.selectbox("レース番号を選んでください", list(range(1, 13)), format_func=lambda x: f"{x}R")
+selected_date = st.selectbox("いわゆる「重賞」(GⅢ・GⅡ・GⅠ)はメインレースとして11Rに行われます。")
+selected_date = st.selectbox("夏の避暑開催（新潟・中京：2025/7/26(土)～8/17(日)）のメインレースは7Rです。")
 if not race_num_int:
     st.stop()
 
