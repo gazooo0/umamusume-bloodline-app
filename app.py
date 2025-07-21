@@ -111,8 +111,8 @@ if not place:
 
 st.markdown("### 🏁 レース番号を選択")
 race_num_int = st.selectbox("レース番号を選んでください", list(range(1, 13)), format_func=lambda x: f"{x}R")
-selected_date = st.selectbox("いわゆる「重賞」(GⅢ・GⅡ・GⅠ)はメインレースとして11Rに行われます。",dates)
-selected_date = st.selectbox("夏の避暑開催（新潟・中京：2025/7/26(土)～8/17(日)）のメインレースは7Rです。",dates)
+st.caption("いわゆる「重賞」(GⅢ・GⅡ・GⅠ)はメインレースとして11Rに行われます。")
+st.caption("夏の避暑開催（新潟・中京：2025/7/26(土)～8/17(日)）のメインレースは7Rです。")
 if not race_num_int:
     st.stop()
 
