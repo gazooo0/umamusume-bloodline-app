@@ -107,11 +107,10 @@ def analyze_race(race_id):
 
 # === UI ===
 st.title("🏇ウマ娘血統サーチ")
-st.markdown("### （最新1か月間対応）")
 
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 
-# ✅ 日付整形の修正ポイント（ここ）
+# 日付整形
 schedule_df["日付"] = pd.to_datetime(
     schedule_df["年"].astype(str) + "/" + schedule_df["月日(曜日)"].str.extract(r"(\d{2}/\d{2})")[0],
     format="%Y/%m/%d"
@@ -124,7 +123,7 @@ schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
 # 📅 日付選択（最新が上）
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
 st.markdown("### 📅 競馬開催日を選択")
-selected_date = st.selectbox("（過去31日まで遡れます。）", dates)
+selected_date = st.selectbox("（直近30日前後の開催レースまで遡れます。）", dates)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
 # 🏇 競馬場選択（ボタン形式）
