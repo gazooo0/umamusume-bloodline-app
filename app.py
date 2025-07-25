@@ -86,9 +86,11 @@ schedule_df["日付"] = pd.to_datetime(
     format="%Y/%m/%d"
 )
 
+# 過去31日 + 未来7日 の開催日を表示
 today = pd.Timestamp.today()
 past_31 = today - pd.Timedelta(days=31)
-schedule_df = schedule_df[schedule_df["日付"].between(past_31, today)]
+future_7 = today + pd.Timedelta(days=7)
+schedule_df = schedule_df[schedule_df["日付"].between(past_31, future_7)]
 
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
 st.markdown("### 📅 競馬開催日を選択")
