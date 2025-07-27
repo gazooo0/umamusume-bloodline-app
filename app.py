@@ -115,6 +115,7 @@ st.markdown("### 🏁 レース番号を選択")
 race_num_int = st.selectbox("レース番号を選んでください", list(range(1, 13)), format_func=lambda x: f"{x}R")
 st.caption("「重賞」(GⅢ・GⅡ・GⅠ)はメインレースとして11Rに行われます。")
 st.caption("避暑期間（新潟・中京：7/26(土)～8/17(日)）のメインは7Rです。")
+st.caption("検索時に情報公開されていれば特別登録馬や出走想定馬のサーチも可能です。")
 if not race_num_int:
     st.stop()
 
