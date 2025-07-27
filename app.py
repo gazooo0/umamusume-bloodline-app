@@ -118,29 +118,34 @@ st.caption("避暑期間（新潟・中京：7/26(土)～8/17(日)）のメイ�
 if not race_num_int:
     st.stop()
 
-selected_row = data_filtered[data_filtered["競馬場"] == place].iloc[0]
-jj = place_codes[place]
-kk = f"{int(selected_row['開催回']):02d}"
-dd = f"{int(selected_row['日目']):02d}"
-race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
-st.markdown(f"🔢 **race_id**: `{race_id}`")
+filtered = data_filtered[data_filtered["競馬場"] == place]
 
-# === 照合実行 ===
-if st.button("🔍ウマ娘血統の馬サーチを開始"):
-    horse_links = get_horse_links(race_id)
-    st.markdown(f"🐎 出走馬数: {len(horse_links)}頭")
+if not filtered.empty:
+    selected_row = filtered.iloc[0]
+    jj = place_codes.get(place, "")
+    kk = f"{int(selected_row['開催回']):02d}"
+    dd = f"{int(selected_row['日目']):02d}"
+    race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
+    st.markdown(f"🔢 **race_id**: `{race_id}`")
 
-    for idx, (name, link) in enumerate(horse_links.items(), 1):
-        with st.spinner(f"{idx}頭目：{name} を照合中..."):
-            try:
-                pedigree = get_pedigree_with_positions(link)
-                matches = match_umamusume(pedigree)
-                st.markdown(f"""
+    # === 照合実行 ===
+    if st.button("🔍ウマ娘血統の馬サーチを開始"):
+        horse_links = get_horse_links(race_id)
+        st.markdown(f"🐎 出走馬数: {len(horse_links)}頭")
+
+        for idx, (name, link) in enumerate(horse_links.items(), 1):
+            with st.spinner(f"{idx}頭目：{name} を照合中..."):
+                try:
+                    pedigree = get_pedigree_with_positions(link)
+                    matches = match_umamusume(pedigree)
+                    st.markdown(f"""
 <div style='font-size:20px; font-weight:bold;'>{idx}. {name}</div>
 該当血統数：{len(matches)}<br>
 { "<br>".join(matches) if matches else "該当なし" }
 """, unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"{name} の照合中にエラーが発生しました：{e}")
-        st.markdown("---")
-        time.sleep(1.2)
+                except Exception as e:
+                    st.error(f"{name} の照合中にエラーが発生しました：{e}")
+            st.markdown("---")
+            time.sleep(1.2)
+else:
+    st.warning(f"⚠️ `{place}` のレース情報が見つかりませんでした。競馬場名を再確認してください。")
