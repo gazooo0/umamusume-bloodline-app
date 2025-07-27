@@ -148,4 +148,4 @@ if not filtered.empty:
             st.markdown("---")
             time.sleep(1.2)
 else:
-    st.warning(f"⚠️ `{place}` のレース情報が見つかりませんでした。競馬場名を再確認してください。")
+    st.warning(f"⚠️ `{place}` 競馬のレース情報が見つかりませんでした。日付・競馬場名を再確認してください。")
