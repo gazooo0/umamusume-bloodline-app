@@ -5,30 +5,6 @@ import re
 import time
 from bs4 import BeautifulSoup
 import requests
-import os
-
-# キャッシュフォルダを用意
-CACHE_DIR = "cached_results"
-os.makedirs(CACHE_DIR, exist_ok=True)
-
-# キャッシュファイル名生成
-def get_cache_filename(race_id, target_kettou):
-    normalized_name = unicodedata.normalize("NFKC", target_kettou).strip().replace(" ", "_")
-    return os.path.join(CACHE_DIR, f"{race_id}_{normalized_name}.csv")
-
-# キャッシュの読み込み
-def load_cached_result(race_id, target_kettou):
-    filename = get_cache_filename(race_id, target_kettou)
-    if os.path.exists(filename):
-        return pd.read_csv(filename)
-    return None
-
-# キャッシュの保存
-def save_cached_result(race_id, target_kettou, results):
-    if results:
-        df = pd.DataFrame(results)
-        filename = get_cache_filename(race_id, target_kettou)
-        df.to_csv(filename, index=False)
 
 # === 設定 ===
 HEADERS = {"User-Agent": "Mozilla/5.0"}
@@ -151,7 +127,7 @@ if not filtered.empty:
     kk = f"{int(selected_row['開催回']):02d}"
     dd = f"{int(selected_row['日目']):02d}"
     race_id = f"{selected_row['年']}{jj}{kk}{dd}{race_num_int:02d}"
-    st.markdown(f"🔢 **race_id**: `{race_id}`")
+    st.markdown(f"🔢 **race_id**: {race_id}")
 
     # === 照合実行 ===
     if st.button("🔍ウマ娘血統の馬サーチを開始"):
@@ -161,31 +137,16 @@ if not filtered.empty:
         for idx, (name, link) in enumerate(horse_links.items(), 1):
             with st.spinner(f"{idx}頭目：{name} を照合中..."):
                 try:
-                    # キャッシュ読み込み
-                    cached_df = load_cached_result(race_id, name)
-                    if cached_df is not None:
-                        st.markdown(f"""
-<div style='font-size:20px; font-weight:bold;'>{idx}. {name}（キャッシュ）</div>
-該当血統数：{len(cached_df)}<br>
-{ "<br>".join(cached_df["該当箇所"].tolist()) if not cached_df.empty else "該当なし" }
-""", unsafe_allow_html=True)
-                        continue
-
-                    # スクレイピング＆照合
                     pedigree = get_pedigree_with_positions(link)
                     matches = match_umamusume(pedigree)
-
-                    # 結果表示
                     st.markdown(f"""
 <div style='font-size:20px; font-weight:bold;'>{idx}. {name}</div>
 該当血統数：{len(matches)}<br>
 { "<br>".join(matches) if matches else "該当なし" }
 """, unsafe_allow_html=True)
-
-                    # キャッシュ保存
-                    save_cached_result(race_id, name, [{"該当箇所": m} for m in matches])
-
                 except Exception as e:
                     st.error(f"{name} の照合中にエラーが発生しました：{e}")
             st.markdown("---")
             time.sleep(1.2)
+else:
+    st.warning(f"⚠️ {place} 競馬のレース情報が見つかりませんでした。日付・競馬場名を再確認してください。")
