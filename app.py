@@ -94,10 +94,7 @@ def match_umamusume(pedigree_dict):
                 html = f"""
 <div style="display: flex; align-items: center; margin-bottom: 12px;">
   <img src="{img_url}" width="80" style="margin-right: 12px;">
-  <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.3;">
-    <div style="font-size: 0.9em; color: #ccc;">【{pos}】</div>
-    <div style="font-size: 1.05em; font-weight: bold;">{name}</div>
-  </div>
+  <div style="font-size: 1em;">【{pos}】<br>{name}</div>
 </div>
 """
                 matched.append(html)
