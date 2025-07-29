@@ -93,10 +93,10 @@ def match_umamusume(pedigree_dict):
             if img_url:
                 html = f"""
 <div style="display: flex; align-items: center; margin-bottom: 12px;">
-  <img src="{img_url}" width="80" style="margin-right: 12px;">
+  <img src="{img_url}" width="55px" style="margin-right: 10px;">
   <div style="display: flex; flex-direction: column; justify-content: center;">
     <div style="font-size: 0.9em; color: #ccc;">【{pos}】</div>
-    <div style="font-size: 1em; font-weight: bold;">{name}</div>
+    <div style="font-size: 0.9em; font-weight: bold;">{name}</div>
   </div>
 </div>
 """
