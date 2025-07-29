@@ -223,6 +223,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+st.markdown("### 👇 検索を実行")
 if st.button("🔍 ウマ娘血統サーチ開始"):
     st.session_state.search_state = {
         "race_id": race_id,
