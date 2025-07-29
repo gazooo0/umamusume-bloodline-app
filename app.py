@@ -91,7 +91,7 @@ def match_umamusume(pedigree_dict):
         if key in normalized_umamusume:
             img_url = image_dict.get(name, "")
             if img_url:
-                matched.append(f"<img src='{img_url}' width='100' style='vertical-align:middle;margin-right:8px;'>【{pos}】{name}")
+                matched.append(f"<img src='{img_url}' width='70' style='vertical-align:middle;margin-right:8px;'>{pos}/{name}")
             else:
                 matched.append(f"【{pos}】{name}")
     return matched
