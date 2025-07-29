@@ -92,6 +92,8 @@ def match_umamusume(pedigree_dict):
             img_url = image_dict.get(name, "")
             if img_url:
                 matched.append(f"<img src='{img_url}' width='100' style='vertical-align:middle;margin-right:8px;'>【{pos}】{name}")
+                matched.append(f"style='vertical-align:middle;margin-right:8px;'>【{pos}】")
+                matched.append(f"style='vertical-align:middle;margin-right:8px;'>{name}")
             else:
                 matched.append(f"【{pos}】{name}")
     return matched
