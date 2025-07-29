@@ -90,10 +90,14 @@ def match_umamusume(pedigree_dict):
         key = unicodedata.normalize("NFKC", name).strip().lower()
         if key in normalized_umamusume:
             img_url = image_dict.get(name, "")
+            # pos を「母父/シンボリクリスエス」の形式に変換
+            label = pos.replace("】", "").replace("【", "").replace("父", "父/").replace("母", "母/")
+            label = re.sub(r"^/", "", label)  # 先頭に / がつかないように
+            label = label.replace("//", "/")  # 二重スラッシュ防止
             if img_url:
-                matched.append(f"<img src='{img_url}' width='70' style='vertical-align:middle;margin-right:8px;'>{pos}/{name}")
+                matched.append(f"<img src='{img_url}' width='50' style='vertical-align:middle;margin-right:8px;'>{label}{name}")
             else:
-                matched.append(f"{pos}/{name}")
+                matched.append(f"{label}{name}")
     return matched
 
 # === Google Sheets キャッシュ ===
