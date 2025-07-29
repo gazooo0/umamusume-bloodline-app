@@ -193,12 +193,12 @@ if not race_num_int:
 st.markdown("### 💾 キャッシュの利用")
 
 # ✅ st.radio の後に値を取得してから使う
-use_cache = st.radio("", ["利用する", "最新情報を取得する"], horizontal=True)
+use_cache = st.radio("事前に保存された情報を…", ["利用する", "最新情報を取得する"], horizontal=True)
 use_cache_bool = use_cache == "利用する"
 
 st.markdown("""
 <div style='line-height: 1.5; font-size: 0.8em; color: gray;'>
-<b>基本的には「利用する」を選択してください。</b><br>
+<b>負荷軽減のため、基本的には「利用する」を選択してください。</b><br>
 過去に誰かが1回でも検索していればすぐ結果を表示できます。<br><br>
 下記のタイミングの時は古い情報を参照する可能性があるため<br>
 「最新情報を取得する」を選択してください。</div>
