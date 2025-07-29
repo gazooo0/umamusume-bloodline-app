@@ -95,7 +95,7 @@ def match_umamusume(pedigree_dict):
                 matched.append(
                     f"""
 <div style='display: flex; align-items: center; margin-bottom: 8px;'>
-  <img src="{img_url}" width="50" style="margin-right: 12px; border-radius: 4px;">
+  <img src="{img_url}" width="80" style="margin-right: 12px; border-radius: 4px;">
   <div style="line-height: 1.3;">
     <div style="font-size: 0.9em; font-weight: bold;">{label}</div>
     <div style="font-size: 0.95em;">{name}</div>
