@@ -92,13 +92,13 @@ def match_umamusume(pedigree_dict):
             img_url = image_dict.get(name, "")
             if img_url:
                 html = f"""
-    <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
-      <img src="{img_url}" width="100" style="margin-right: 12px;">
-      <div style="line-height: 1.4;">
-        <div style="font-size: 0.95em; color: #ccc;">【{pos}】</div>
-        <div style="font-weight: bold; font-size: 1.1em;">{name}</div>
-      </div>
-    </div>
+<div style="display: flex; align-items: center; margin-bottom: 12px;">
+  <img src="{img_url}" width="80" style="margin-right: 12px;">
+  <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.3;">
+    <div style="font-size: 0.9em; color: #ccc;">【{pos}】</div>
+    <div style="font-size: 1.05em; font-weight: bold;">{name}</div>
+  </div>
+</div>
 """
                 matched.append(html)
             else:
