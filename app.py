@@ -91,17 +91,18 @@ def match_umamusume(pedigree_dict):
         if key in normalized_umamusume:
             img_url = image_dict.get(name, "")
             if img_url:
-                matched.append(f"""
-<div style='display: flex; align-items: flex-start; margin-bottom: 12px;'>
-  <img src='{img_url}' width='100' style='margin-right: 12px;'>
-  <div style='display: flex; flex-direction: column; justify-content: center;'>
-    <div style='font-size: 0.9em; color: gray;'>【{pos}】</div>
-    <div style='font-weight: bold; font-size: 1.1em;'>{name}</div>
-  </div>
-</div>
-""")
+                html = f"""
+    <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+      <img src="{img_url}" width="100" style="margin-right: 12px;">
+      <div style="line-height: 1.4;">
+        <div style="font-size: 0.95em; color: #ccc;">【{pos}】</div>
+        <div style="font-weight: bold; font-size: 1.1em;">{name}</div>
+      </div>
+    </div>
+"""
+                matched.append(html)
             else:
-                matched.append(f"【{pos}】{name}")
+                matched.append(f"<div style='margin-bottom:8px;'>【{pos}】{name}</div>")
     return matched
 
 # === Google Sheets キャッシュ ===
