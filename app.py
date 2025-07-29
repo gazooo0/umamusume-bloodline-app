@@ -93,7 +93,7 @@ def match_umamusume(pedigree_dict):
             if img_url:
                 matched.append(f"<img src='{img_url}' width='70' style='vertical-align:middle;margin-right:8px;'>{pos}/{name}")
             else:
-                matched.append(f"【{pos}】{name}")
+                matched.append(f"{pos}/{name}")
     return matched
 
 # === Google Sheets キャッシュ ===
