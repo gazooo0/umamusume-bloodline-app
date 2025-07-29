@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
+from streamlit import components
 
 # === Google Sheets設定 ===
 SHEET_ID = "1wMkpbOvqveVBkJSR85mpZcnKThYSEmusmsl710SaRKw"
@@ -91,7 +92,15 @@ def match_umamusume(pedigree_dict):
         if key in normalized_umamusume:
             img_url = image_dict.get(name, "")
             if img_url:
-                matched.append(f"<img src='{img_url}' width='100' style='vertical-align:middle;margin-right:8px;'>【{pos}】{name}")
+                matched.append(f"""
+<div style='display: flex; align-items: center; margin-bottom: 10px;'>
+  <img src="{img_url}" width="80" style="margin-right: 10px; border-radius: 4px;">
+  <div>
+    <div style="font-weight: bold;">{name}</div>
+    <div style="font-size: 0.9em; color: #666;">【{pos}】</div>
+  </div>
+</div>
+""")
             else:
                 matched.append(f"【{pos}】{name}")
     return matched
@@ -242,11 +251,16 @@ if search_state.get("triggered") and search_state.get("race_id") == race_id:
                 try:
                     pedigree = get_pedigree_with_positions(link)
                     matches = match_umamusume(pedigree)
-                    st.markdown(f"""
-<div style='font-size:20px; font-weight:bold;'>{idx}. {name}</div>
-該当血統数：{len(matches)}<br>
-{'<br>'.join(matches) if matches else '該当なし'}
-""", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:20px; font-weight:bold;'>{idx}. {name}</div>", unsafe_allow_html=True)
+                    st.markdown(f"該当血統数：{len(matches)}", unsafe_allow_html=True)
+
+                # 血統表示は1つずつ HTMLコンポーネントとして表示
+                    if matches:
+                        for block in matches:
+                            components.v1.html(block, height=100, scrolling=False)
+                    else:
+                        st.markdown("該当なし")
+                    
                     result_rows.append({
                         "馬名": name,
                         "該当数": len(matches),
