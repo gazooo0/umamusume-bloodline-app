@@ -33,7 +33,17 @@ def generate_race_ids_between(start_date, end_date):
     end_date = pd.Timestamp(end_date)
 
     df = pd.read_csv(SCHEDULE_CSV_PATH)
-    df["日付"] = pd.to_datetime(df["年"].astype(str) + "-" + df["月日(曜日)"], errors='coerce')
+    
+    # 曜日を除去してMM-DD形式に
+    df["月日(曜日)"] = df["月日(曜日)"].str.extract(r"(\d{2}-\d{2})")
+    
+    # 正しい日付に変換
+    df["日付"] = pd.to_datetime(
+        df["年"].astype(str) + "-" + df["月日(曜日)"],
+        format="%Y-%m-%d",
+        errors='coerce'
+    )
+
     df = df[df["日付"].notnull()]
     df = df[df['日付'].between(start_date, end_date)]  
 
