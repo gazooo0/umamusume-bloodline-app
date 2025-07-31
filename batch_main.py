@@ -1,49 +1,38 @@
-import os
-import datetime
 import pandas as pd
+import datetime
 import requests
-from bs4 import BeautifulSoup
+import re
 import gspread
-from google.oauth2.service_account import Credentials
-import base64
+from oauth2client.service_account import ServiceAccountCredentials
+from bs4 import BeautifulSoup
 
-# ===============================
-# GitHub Actions 対応: Secretsから認証情報復元
-# ===============================
-if "GOOGLE_CREDS_JSON" in os.environ:
-    decoded = base64.b64decode(os.environ["GOOGLE_CREDS_JSON"])
-    with open("service_account.json", "wb") as f:
-        f.write(decoded)
+SCHEDULE_CSV_PATH = 'jra_2025_keibabook_schedule.csv'
+UMAMUSUME_BLOODLINE_CSV = 'umamusume.csv'
+SPREADSHEET_ID = '1wMkpbOvqveVBkJSR85mpZcnKThYSEmusmsl710SaRKw'
+SHEET_NAME = 'cache'
 
-# ===============================
-# 設定
-# ===============================
-SCHEDULE_CSV_PATH = "jra_2025_keibabook_schedule.csv"
-UMAMUSUME_CSV_PATH = "umamusume.csv"
-GOOGLE_SHEET_NAME = "umamusume_cache"
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
-
-# ===============================
-# Google Sheets クライアント取得
-# ===============================
-def get_gspread_client():
-    credentials = Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=SCOPES
-    )
+# Google Sheets 接続
+def connect_to_gspread():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
     gc = gspread.authorize(credentials)
-    return gc
+    return gc.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
 
-# ===============================
-# race_id生成（未来7日間）
-# ===============================
+# 開催地コード取得
+def get_place_code(place_name):
+    place_dict = {
+        '札幌': '01', '函館': '02', '福島': '03', '新潟': '04',
+        '東京': '05', '中山': '06', '中京': '07', '京都': '08', '阪神': '09', '小倉': '10'
+    }
+    return place_dict.get(place_name, '00')
+
+# 開催日から7日間分のrace_id生成
 def generate_future_race_ids(base_date):
     df = pd.read_csv(SCHEDULE_CSV_PATH)
 
     print("📝 CSV読み込み成功。先頭5行:\n", df.head())
 
-    # 年 + 月日(曜日) から 'YYYY/MM/DD' を構成して日付変換
+    # 日付列を構築して変換
     df['日付'] = pd.to_datetime(df['年'].astype(str) + '/' + df['月日(曜日)'].str.extract(r'(\d+/\d+)')[0], errors='coerce')
     print("📆 日付変換後の先頭:\n", df[['年', '月日(曜日)', '日付']].head())
 
@@ -52,133 +41,70 @@ def generate_future_race_ids(base_date):
 
     race_ids = []
     for _, row in df.iterrows():
-        date_str = row['日付'].strftime('%Y%m%d')
+        year = f"{int(row['年']):04d}"
         place_code = get_place_code(row['競馬場'])
         kai = f"{int(row['開催回']):02d}"
         nichi = f"{int(row['日目']):02d}"
         for race_num in range(1, 13):
             num = f"{race_num:02d}"
-            race_id = f"{date_str}{place_code}{kai}{nichi}{num}"
+            # 正しいフォーマット YYYYJJKKDDNN（12桁）
+            race_id = f"{year}{place_code}{kai}{nichi}{num}"
             race_ids.append(race_id)
 
-    print(f"📅 未来7日間の race_id 数: {len(race_ids)}")
+    print(f"📅 対象race_id数: {len(race_ids)}")
     return race_ids
 
-def get_place_code(place_name):
-    place_dict = {
-        "札幌": "01", "函館": "02", "福島": "03", "新潟": "04",
-        "東京": "05", "中山": "06", "中京": "07", "京都": "08",
-        "阪神": "09", "小倉": "10"
-    }
-    return place_dict.get(place_name, "00")
+# netkeibaから出走馬の血統ページリンクを取得
+def get_horse_links(race_id):
+    url = f"https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
+    res = requests.get(url)
+    soup = BeautifulSoup(res.text, 'html.parser')
+    links = soup.select('a[href*="/horse/"]')
+    horse_links = list(set([l['href'] for l in links if '/horse/' in l['href']]))
+    return horse_links
 
-# ===============================
-# 出走馬と血統情報を取得
-# ===============================
-def scrape_pedigree_info(race_id):
-    url = f"https://db.netkeiba.com/race/{race_id}/"
-    print(f"🌐 アクセス中: {url}")
+# 血統ページから5代血統を取得
+def get_pedigree_names(horse_url):
+    url = f"https://db.netkeiba.com{horse_url}ped/"
     res = requests.get(url)
     res.encoding = res.apparent_encoding
-    soup = BeautifulSoup(res.text, "html.parser")
-    horse_links = soup.select("td.horse a")
+    soup = BeautifulSoup(res.text, 'html.parser')
+    return [td.text.strip() for td in soup.select('table.blood_table td') if td.text.strip()]
 
-    horses = []
-    for a in horse_links:
-        name = a.text.strip()
-        href = a.get("href")
-        if not href:
-            continue
-        horse_id = href.split("/")[-2]
-        horse_url = f"https://db.netkeiba.com/horse/ped/{horse_id}/"
-        horses.append({
-            "name": name,
-            "url": horse_url
-        })
-    print(f"🐎 出走馬数: {len(horses)}")
-    return horses
-
-# ===============================
-# 血統照合（ウマ娘と比較）
-# ===============================
-def check_umamusume_bloodline(horse):
-    res = requests.get(horse["url"])
-    res.encoding = res.apparent_encoding
-    soup = BeautifulSoup(res.text, "html.parser")
-    table = soup.select_one("table.db_parent_table")
-    if not table:
-        return {"該当数": 0, "該当箇所": "", "name": horse["name"]}
-
-    with open(UMAMUSUME_CSV_PATH, encoding='utf-8') as f:
-        umamusume_list = [line.strip() for line in f if line.strip()]
-
-    matches = []
-    for td in table.select("td"):
-        if td.text.strip() in umamusume_list:
-            matches.append(f"<div>{td.text.strip()}</div>")
-
-    if matches:
-        print(f"🧬 {horse['name']} 該当: {len(matches)} → {matches}")
-    return {
-        "name": horse["name"],
-        "該当数": len(matches),
-        "該当箇所": "".join(matches)
-    }
-
-# ===============================
-# Google Sheetsへ保存
-# ===============================
-def save_to_sheets(results):
-    gc = get_gspread_client()
-    sh = gc.open(GOOGLE_SHEET_NAME)
-    try:
-        worksheet = sh.worksheet("cache")
-    except gspread.exceptions.WorksheetNotFound:
-        worksheet = sh.add_worksheet(title="cache", rows="1000", cols="10")
-
-    existing = worksheet.get_all_values()
-    headers = ["馬名", "該当数", "該当箇所", "race_id"]
-    if not existing:
-        worksheet.append_row(headers)
-
-    for row in results:
-        worksheet.append_row([
-            row["馬名"],
-            row["該当数"],
-            row["該当箇所"],
-            row["race_id"]
-        ])
-    print(f"✅ Google Sheets へ {len(results)} 件保存しました")
-
-# ===============================
 # メイン処理
-# ===============================
 def main():
-    today = pd.Timestamp.today().normalize()
+    today = datetime.date.today()
+    print(f"🔁 実行日: {today}")
+
     race_ids = generate_future_race_ids(today)
-    print(f"📅 対象race_id数: {len(race_ids)}")
+    print(f"📌 処理対象のrace_id: {race_ids[:5]} ...")
+
+    bloodline_df = pd.read_csv(UMAMUSUME_BLOODLINE_CSV)
+    bloodline_keywords = set(bloodline_df['血統名'].dropna().tolist())
+    print(f"🧬 照合対象ウマ娘血統数: {len(bloodline_keywords)}")
+
+    ws = connect_to_gspread()
+    print("✅ Google Sheets 接続成功")
 
     for race_id in race_ids:
-        print(f"\n🔍 処理中: {race_id}")
-        try:
-            horses = scrape_pedigree_info(race_id)
-            results = []
-            for horse in horses:
-                result = check_umamusume_bloodline(horse)
-                if result["該当数"] > 0:
-                    results.append({
-                        "馬名": horse["name"],
-                        "該当数": result["該当数"],
-                        "該当箇所": result["該当箇所"],
-                        "race_id": race_id
-                    })
-            if results:
-                print(f"📋 {race_id} に該当馬あり → {len(results)}件")
-                save_to_sheets(results)
-            else:
-                print(f"⚠️ {race_id} は該当馬なし")
-        except Exception as e:
-            print(f"❌ エラー発生: {e}")
+        print(f"🔍 処理中: {race_id}")
+        horse_links = get_horse_links(race_id)
+        print(f"🐎 出走馬数（血統リンク取得）: {len(horse_links)}")
 
-if __name__ == "__main__":
+        for link in horse_links:
+            horse_id = link.split('/')[-2]
+            horse_url = f"/horse/{horse_id}/"
+            try:
+                names = get_pedigree_names(horse_url)
+            except Exception as e:
+                print(f"⚠️ 血統取得エラー: {horse_url} → {e}")
+                continue
+            matches = [name for name in names if name in bloodline_keywords]
+            if matches:
+                horse_name = horse_id  # 馬名取得するなら別途実装
+                row = [horse_name, len(matches), ', '.join(matches), race_id]
+                ws.append_row(row)
+                print(f"✅ 登録: {row}")
+
+if __name__ == '__main__':
     main()
