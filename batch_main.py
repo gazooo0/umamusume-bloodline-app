@@ -121,19 +121,21 @@ def main():
         print(f"🐎 出走馬数（血統リンク取得）: {len(horse_links)}")
 
         for link in horse_links:
-            horse_id = link.split('/')[-2]
-            horse_url = f"/horse/{horse_id}/"
-            try:
-                names = get_pedigree_names(horse_url)
-            except Exception as e:
-                print(f"⚠️ 血統取得エラー: {horse_url} → {e}")
-                continue
-            matches = [name for name in names if name in bloodline_keywords]
-            if matches:
-                horse_name = horse_id  # 馬名取得するなら別途実装
-                row = [horse_name, len(matches), ', '.join(matches), race_id]
-                ws.append_row(row)
-                print(f"✅ 登録: {row}")
+    　　　　horse_name = link
+    　　　　horse_url = horse_links[link]
+        try:
+            names_dict = get_pedigree_with_positions(horse_url, position_labels=[
+                "父", "母", "母父", "父母", "父父", "母母", "母母父", "母父母"
+            ])
+        except Exception as e:
+            print(f"⚠️ 血統取得エラー: {horse_url} → {e}")
+            continue
+
+        matches = [name for name in names_dict.values() if name in bloodline_keywords]
+        if matches:
+            row = [horse_name, len(matches), ', '.join(matches), race_id]
+            ws.append_row(row)
+            print(f"✅ 登録: {row}")
 
 if __name__ == '__main__':
     main()
