@@ -131,24 +131,39 @@ def main():
     ws = connect_to_gspread()
     position_labels = generate_position_labels()
 
-    for race_id in race_ids:
-        print(f"\n🏇 race_id: {race_id}")
-        horse_links = get_horse_links(race_id)
-        results = []
-        for horse_name, horse_url in horse_links.items():
-            try:
-                pedigree = get_pedigree_with_positions(horse_url, position_labels)
-                matched_html_blocks = match_umamusume(pedigree, image_dict, keyword_set)
-                if matched_html_blocks:
-                    html_result = '<br>'.join(matched_html_blocks)
-                    row = [horse_name, len(matched_html_blocks), html_result, race_id]
-                else:
-                    row = [horse_name, 0, '該当なし', race_id]
-                results.append(row)
-            except Exception as e:
-                print(f"⚠️ {horse_name} error: {e}")
-                continue
-            time.sleep(1.5)
+for race_id in race_ids:
+    print(f"\n🏇 race_id: {race_id}")
+    horse_links = get_horse_links(race_id)
+    results = []
+
+    # 1頭ずつ処理して結果だけまとめておく
+    for horse_name, horse_url in horse_links.items():
+        try:
+            pedigree = get_pedigree_with_positions(horse_url, position_labels)
+            matched_html_blocks = match_umamusume(pedigree, image_dict, keyword_set)
+            if matched_html_blocks:
+                html_result = '<br>'.join(matched_html_blocks)
+                row = [horse_name, len(matched_html_blocks), html_result, race_id]
+            else:
+                row = [horse_name, 0, '該当なし', race_id]
+            results.append(row)
+        except Exception as e:
+            print(f"⚠️ {horse_name} error: {e}")
+            continue
+        time.sleep(1.5)  # 馬ごとの間引き
+
+    # 🧹 先に古いデータ削除
+    delete_old_entries(ws, race_id)
+    time.sleep(1)
+
+    # ✅ 一括書き込み（append_row → append_rows）
+    if results:
+        ws.append_rows(results, value_input_option='USER_ENTERED')
+        print(f"✅ {len(results)} 件 書き込み完了")
+    else:
+        print("⚠️ 書き込みデータなし")
+
+    time.sleep(3)  # レースごとの間引き
 
         for row in results:
             ws.append_row(row)
