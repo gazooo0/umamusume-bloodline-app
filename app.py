@@ -5,6 +5,7 @@ import re
 import time
 import os
 import json
+import base64
 from bs4 import BeautifulSoup
 import requests
 import gspread
@@ -25,6 +26,12 @@ else:
 credentials = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 gc = gspread.authorize(credentials)
 sheet = gc.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+
+# GitHub Actions 用：Secrets から service_account.json を再生成
+if "GOOGLE_CREDS_JSON" in os.environ:
+    decoded = base64.b64decode(os.environ["GOOGLE_CREDS_JSON"])
+    with open("service_account.json", "wb") as f:
+        f.write(decoded)
 
 # === 設定 ===
 HEADERS = {"User-Agent": "Mozilla/5.0"}
