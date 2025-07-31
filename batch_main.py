@@ -111,15 +111,16 @@ def generate_position_labels():
         return result
     return dfs("", 0, 5)[1:]
 
-def delete_old_entries(ws, race_id):
+def delete_old_entries_except_latest(ws, race_id):
     all_data = ws.get_all_values()
     header = all_data[0]
     data = all_data[1:]
     race_id_col = header.index("race_id")
-    rows_to_delete = [i + 2 for i, row in enumerate(data) if row[race_id_col] == race_id]
-    for i in reversed(rows_to_delete):
-        ws.delete_rows(i)
-    time.sleep(3)
+    target_rows = [(i + 2, row) for i, row in enumerate(data) if row[race_id_col] == race_id]
+    if len(target_rows) > 1:
+        for i in reversed([row_num for row_num, _ in target_rows[:-len(set([row[0] for _, row in target_rows]))]]):
+            ws.delete_rows(i)
+            time.sleep(2)
 
 def main():
     today = datetime.date.today()
@@ -152,8 +153,10 @@ def main():
         for row in results:
             ws.append_row(row)
             print(f"✅ {row[0]} 登録完了")
-        time.sleep(2)
-        delete_old_entries(ws, race_id)
+            time.sleep(1)
+
+        delete_old_entries_except_latest(ws, race_id)
+        time.sleep(10)
 
 if __name__ == '__main__':
     main()
