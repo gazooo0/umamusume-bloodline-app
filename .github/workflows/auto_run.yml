@@ -2,7 +2,7 @@ name: Auto Run Batch Script
 
 on:
   schedule:
-    - cron: '0 10,12,14,16,18,20,22 * * *'  # JST 19時〜翌5時の1日7回
+    - cron: '0 1,2,3,7,8,9,10,11,12,15 * * *' #UTC時間。日本時間は+9
   workflow_dispatch:
 
 jobs:
