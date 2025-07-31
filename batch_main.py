@@ -133,7 +133,7 @@ def save_to_sheets(results):
 # メイン処理
 # ===============================
 def main():
-    today = datetime.date.today()
+    today = pd.Timestamp.today().normalize()
     race_ids = generate_future_race_ids(today)
     for race_id in race_ids:
         print(f"🔍 {race_id}")
