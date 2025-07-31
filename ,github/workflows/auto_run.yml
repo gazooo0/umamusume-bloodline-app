@@ -1,0 +1,30 @@
+name: UmaMusume Bloodline Scraper
+
+on:
+  schedule:
+    - cron: '0 1,2,3,9,10,11,12 * * *'  # JSTで10〜21時の7回実行
+  workflow_dispatch:
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run batch script
+        env:
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+        run: |
+          echo "$GOOGLE_CREDS_JSON" | base64 --decode > service_account.json
+          python batch_main.py
