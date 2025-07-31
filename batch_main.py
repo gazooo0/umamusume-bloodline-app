@@ -9,8 +9,8 @@ from google.oauth2.service_account import Credentials
 # ===============================
 # 設定
 # ===============================
-SCHEDULE_CSV_PATH = "data/jra_2025_keibabook_schedule.csv"
-UMAMUSUME_CSV_PATH = "data/umamusume.csv"
+SCHEDULE_CSV_PATH = "jra_2025_keibabook_schedule.csv"
+UMAMUSUME_CSV_PATH = "umamusume.csv"
 GOOGLE_SHEET_NAME = "umamusume_cache"
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SERVICE_ACCOUNT_FILE = 'service_account.json'
