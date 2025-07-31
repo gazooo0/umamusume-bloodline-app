@@ -37,7 +37,11 @@ def generate_future_race_ids(base_date):
     print("📆 日付変換後の先頭:\n", df[['年', '月日(曜日)', '日付']].head())
 
     df = df[df['日付'].notnull()]
-    df = df[df['日付'].between(base_date, base_date + datetime.timedelta(days=6))]
+
+    # 型を揃えて比較
+    start_date = pd.to_datetime(base_date)
+    end_date = pd.to_datetime(base_date + datetime.timedelta(days=6))
+    df = df[df['日付'].between(start_date, end_date)]
 
     race_ids = []
     for _, row in df.iterrows():
@@ -47,7 +51,7 @@ def generate_future_race_ids(base_date):
         nichi = f"{int(row['日目']):02d}"
         for race_num in range(1, 13):
             num = f"{race_num:02d}"
-            # 正しいフォーマット YYYYJJKKDDNN（12桁）
+            # YYYYJJKKDDNN 形式の12桁
             race_id = f"{year}{place_code}{kai}{nichi}{num}"
             race_ids.append(race_id)
 
