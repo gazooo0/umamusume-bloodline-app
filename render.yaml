@@ -1,12 +1,1 @@
-services:
-  - type: background
-    name: uma-bloodline-scraper
-    env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python batch_main.py
-    schedule: "10 * * * *"  # 毎時10分に実行（UTC基準）
 
-    envVars:
-      - key: GOOGLE_APPLICATION_CREDENTIALS
-        value: service_account.json
