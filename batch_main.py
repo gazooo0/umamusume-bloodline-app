@@ -126,7 +126,7 @@ def main():
     race_ids = generate_future_race_ids(today)
     bloodline_df = pd.read_csv(UMAMUSUME_BLOODLINE_CSV)
     keyword_set = set(bloodline_df['kettou'].dropna().str.lower().str.strip())
-    image_dict = dict(zip(bloodline_df['kettou'], bloodline_df['image_url']))
+    image_dict = dict(zip(bloodline_df['kettou'], bloodline_df['url']))
     ws = connect_to_gspread()
     position_labels = generate_position_labels()
 
