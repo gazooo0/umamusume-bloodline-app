@@ -5,12 +5,21 @@ import requests
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
+import base64
+
+# ===============================
+# GitHub Actions 対応: Secretsから認証情報復元
+# ===============================
+if "GOOGLE_CREDS_JSON" in os.environ:
+    decoded = base64.b64decode(os.environ["GOOGLE_CREDS_JSON"])
+    with open("service_account.json", "wb") as f:
+        f.write(decoded)
 
 # ===============================
 # 設定
 # ===============================
-SCHEDULE_CSV_PATH = "jra_2025_keibabook_schedule.csv"
-UMAMUSUME_CSV_PATH = "umamusume.csv"
+SCHEDULE_CSV_PATH = "data/jra_2025_keibabook_schedule.csv"
+UMAMUSUME_CSV_PATH = "data/umamusume.csv"
 GOOGLE_SHEET_NAME = "umamusume_cache"
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SERVICE_ACCOUNT_FILE = 'service_account.json'
@@ -61,6 +70,7 @@ def get_place_code(place_name):
 # ===============================
 def scrape_pedigree_info(race_id):
     url = f"https://db.netkeiba.com/race/{race_id}/"
+    print(f"🌐 アクセス中: {url}")
     res = requests.get(url)
     res.encoding = res.apparent_encoding
     soup = BeautifulSoup(res.text, "html.parser")
@@ -78,6 +88,7 @@ def scrape_pedigree_info(race_id):
             "name": name,
             "url": horse_url
         })
+    print(f"🐎 出走馬数: {len(horses)}")
     return horses
 
 # ===============================
@@ -99,6 +110,8 @@ def check_umamusume_bloodline(horse):
         if td.text.strip() in umamusume_list:
             matches.append(f"<div>{td.text.strip()}</div>")
 
+    if matches:
+        print(f"🧬 {horse['name']} 該当: {len(matches)} → {matches}")
     return {
         "name": horse["name"],
         "該当数": len(matches),
@@ -128,6 +141,7 @@ def save_to_sheets(results):
             row["該当箇所"],
             row["race_id"]
         ])
+    print(f"✅ Google Sheets へ {len(results)} 件保存しました")
 
 # ===============================
 # メイン処理
@@ -135,8 +149,10 @@ def save_to_sheets(results):
 def main():
     today = pd.Timestamp.today().normalize()
     race_ids = generate_future_race_ids(today)
+    print(f"📅 対象race_id数: {len(race_ids)}")
+
     for race_id in race_ids:
-        print(f"🔍 {race_id}")
+        print(f"\n🔍 処理中: {race_id}")
         try:
             horses = scrape_pedigree_info(race_id)
             results = []
@@ -150,9 +166,12 @@ def main():
                         "race_id": race_id
                     })
             if results:
+                print(f"📋 {race_id} に該当馬あり → {len(results)}件")
                 save_to_sheets(results)
+            else:
+                print(f"⚠️ {race_id} は該当馬なし")
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ エラー発生: {e}")
 
 if __name__ == "__main__":
     main()
