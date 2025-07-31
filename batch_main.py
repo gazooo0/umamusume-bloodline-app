@@ -84,7 +84,7 @@ def main():
     print(f"📌 処理対象のrace_id: {race_ids[:5]} ...")
 
     bloodline_df = pd.read_csv(UMAMUSUME_BLOODLINE_CSV)
-    bloodline_keywords = set(bloodline_df['血統名'].dropna().tolist())
+    bloodline_keywords = set(bloodline_df['kettou'].dropna().tolist())
     print(f"🧬 照合対象ウマ娘血統数: {len(bloodline_keywords)}")
 
     ws = connect_to_gspread()
