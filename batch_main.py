@@ -92,7 +92,7 @@ def get_pedigree_with_positions(horse_url):
 
 def main():
     today = datetime.date.today()
-    race_ids = generate_future_race_ids(today)
+    race_ids = generate_future_race_ids(pd.Timestamp(today))
     bloodline_df = pd.read_csv(UMAMUSUME_BLOODLINE_CSV)
     bloodline_keywords = {unicodedata.normalize("NFKC", k).strip().lower() for k in bloodline_df['kettou'].dropna()}
     ws = connect_to_gspread()
