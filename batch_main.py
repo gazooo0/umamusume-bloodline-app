@@ -121,8 +121,8 @@ def main():
         print(f"🐎 出走馬数（血統リンク取得）: {len(horse_links)}")
 
         for link in horse_links:
-    　　　　horse_name = link
-    　　　　horse_url = horse_links[link]
+            horse_name = link
+            horse_url = horse_links[link]
         try:
             names_dict = get_pedigree_with_positions(horse_url, position_labels=[
                 "父", "母", "母父", "父母", "父父", "母母", "母母父", "母父母"
