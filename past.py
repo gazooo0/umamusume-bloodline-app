@@ -29,10 +29,13 @@ def get_place_code(place_name):
     return place_dict.get(place_name, '00')
 
 def generate_race_ids_between(start_date, end_date):
+    start_date = pd.Timestamp(start_date)
+    end_date = pd.Timestamp(end_date)
+
     df = pd.read_csv(SCHEDULE_CSV_PATH)
-    df['日付'] = pd.to_datetime(df['年'].astype(str) + '/' + df['月日(曜日)'].str.extract(r'(\d+/\d+)')[0], errors='coerce')
-    df = df[df['日付'].notnull()]
-    df = df[df['日付'].between(start_date, end_date)]
+    df["日付"] = pd.to_datetime(df["年"].astype(str) + "-" + df["月日(曜日)"], errors='coerce')
+    df = df[df["日付"].notnull()]
+    df = df[df['日付'].between(start_date, end_date)]  
 
     race_ids = []
     for _, row in df.iterrows():
