@@ -3,6 +3,7 @@ import datetime
 import requests
 import re
 import gspread
+import unicodedata
 from oauth2client.service_account import ServiceAccountCredentials
 from bs4 import BeautifulSoup
 
@@ -10,6 +11,8 @@ SCHEDULE_CSV_PATH = 'jra_2025_keibabook_schedule.csv'
 UMAMUSUME_BLOODLINE_CSV = 'umamusume.csv'
 SPREADSHEET_ID = '1wMkpbOvqveVBkJSR85mpZcnKThYSEmusmsl710SaRKw'
 SHEET_NAME = 'cache'
+
+HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 # Google Sheets 接続
 def connect_to_gspread():
@@ -61,19 +64,41 @@ def generate_future_race_ids(base_date):
 # netkeibaから出走馬の血統ページリンクを取得
 def get_horse_links(race_id):
     url = f"https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
-    res = requests.get(url)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    links = soup.select('a[href*="/horse/"]')
-    horse_links = list(set([l['href'] for l in links if '/horse/' in l['href']]))
+    res = requests.get(url, headers=HEADERS)
+    res.encoding = "EUC-JP"
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    horse_links = {}
+    tables = soup.find_all("table", class_="RaceTable01")
+    for table in tables:
+        for a in table.find_all("a", href=True):
+            if "/horse/" in a["href"]:
+                name = a.get_text(strip=True)
+                full_url = "https://db.netkeiba.com" + a["href"]
+                if len(name) >= 2 and name not in horse_links:
+                    horse_links[name] = full_url
     return horse_links
 
 # 血統ページから5代血統を取得
-def get_pedigree_names(horse_url):
-    url = f"https://db.netkeiba.com{horse_url}ped/"
-    res = requests.get(url)
-    res.encoding = res.apparent_encoding
-    soup = BeautifulSoup(res.text, 'html.parser')
-    return [td.text.strip() for td in soup.select('table.blood_table td') if td.text.strip()]
+def get_pedigree_with_positions(horse_url, position_labels):
+    horse_id = horse_url.rstrip("/").split("/")[-1]
+    ped_url = f"https://db.netkeiba.com/horse/ped/{horse_id}/"
+    res = requests.get(ped_url, headers=HEADERS)
+    res.encoding = "EUC-JP"
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    table = soup.find("table", class_="blood_table")
+    if not table:
+        return {}
+
+    names = {}
+    td_list = table.find_all("td")
+    for i, td in enumerate(td_list[:len(position_labels)]):
+        label = position_labels[i]
+        a = td.find("a")
+        if a and a.text.strip():
+            names[label] = a.text.strip()
+    return names
 
 # メイン処理
 def main():
