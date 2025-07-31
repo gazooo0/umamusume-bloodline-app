@@ -40,8 +40,13 @@ def get_gspread_client():
 # ===============================
 def generate_future_race_ids(base_date):
     df = pd.read_csv(SCHEDULE_CSV_PATH)
-    df['日付'] = pd.to_datetime(df['月日(曜日)'], format='%m月%d日', errors='coerce')
-    df['日付'] = df['日付'].apply(lambda d: d.replace(year=base_date.year) if pd.notnull(d) else d)
+
+    print("📝 CSV読み込み成功。先頭5行:\n", df.head())
+
+    # 年 + 月日(曜日) から 'YYYY/MM/DD' を構成して日付変換
+    df['日付'] = pd.to_datetime(df['年'].astype(str) + '/' + df['月日(曜日)'].str.extract(r'(\d+/\d+)')[0], errors='coerce')
+    print("📆 日付変換後の先頭:\n", df[['年', '月日(曜日)', '日付']].head())
+
     df = df[df['日付'].notnull()]
     df = df[df['日付'].between(base_date, base_date + datetime.timedelta(days=6))]
 
@@ -55,6 +60,8 @@ def generate_future_race_ids(base_date):
             num = f"{race_num:02d}"
             race_id = f"{date_str}{place_code}{kai}{nichi}{num}"
             race_ids.append(race_id)
+
+    print(f"📅 未来7日間の race_id 数: {len(race_ids)}")
     return race_ids
 
 def get_place_code(place_name):
