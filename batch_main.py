@@ -111,16 +111,15 @@ def generate_position_labels():
         return result
     return dfs("", 0, 5)[1:]
 
-def delete_old_entries_except_latest(ws, race_id):
+def delete_old_entries(ws, race_id):
     all_data = ws.get_all_values()
     header = all_data[0]
     data = all_data[1:]
     race_id_col = header.index("race_id")
-    target_rows = [(i + 2, row) for i, row in enumerate(data) if row[race_id_col] == race_id]
-    if len(target_rows) > 1:
-        for i in reversed([row_num for row_num, _ in target_rows[:-len(set([row[0] for _, row in target_rows]))]]):
-            ws.delete_rows(i)
-            time.sleep(2)
+    rows_to_delete = [i + 2 for i, row in enumerate(data) if row[race_id_col] == race_id]
+    for i in reversed(rows_to_delete):
+        ws.delete_rows(i)
+    time.sleep(2)
 
 def main():
     today = datetime.date.today()
@@ -131,47 +130,15 @@ def main():
     ws = connect_to_gspread()
     position_labels = generate_position_labels()
 
-for race_id in race_ids:
-    print(f"\n🏇 race_id: {race_id}")
-    horse_links = get_horse_links(race_id)
-    results = []
+    for race_id in race_ids:
+        print(f"\n🏇 race_id: {race_id}")
+        horse_links = get_horse_links(race_id)
+        results = []
 
-    # 1頭ずつ処理して結果だけまとめておく
-    for horse_name, horse_url in horse_links.items():
-        try:
-            pedigree = get_pedigree_with_positions(horse_url, position_labels)
-            matched_html_blocks = match_umamusume(pedigree, image_dict, keyword_set)
-            if matched_html_blocks:
-                html_result = '<br>'.join(matched_html_blocks)
-                row = [horse_name, len(matched_html_blocks), html_result, race_id]
-            else:
-                row = [horse_name, 0, '該当なし', race_id]
-            results.append(row)
-        except Exception as e:
-            print(f"⚠️ {horse_name} error: {e}")
-            continue
-        time.sleep(1.5)  # 馬ごとの間引き
-
-    # 🧹 先に古いデータ削除
-    delete_old_entries(ws, race_id)
-    time.sleep(1)
-
-    # ✅ 一括書き込み（append_row → append_rows）
-    if results:
-        ws.append_rows(results, value_input_option='USER_ENTERED')
-        print(f"✅ {len(results)} 件 書き込み完了")
-    else:
-        print("⚠️ 書き込みデータなし")
-
-    time.sleep(3)  # レースごとの間引き
-
-        for row in results:
-            ws.append_row(row)
-            print(f"✅ {row[0]} 登録完了")
-            time.sleep(1)
-
-        delete_old_entries_except_latest(ws, race_id)
-        time.sleep(10)
-
-if __name__ == '__main__':
-    main()
+        for horse_name, horse_url in horse_links.items():
+            try:
+                pedigree = get_pedigree_with_positions(horse_url, position_labels)
+                matched_html_blocks = match_umamusume(pedigree, image_dict, keyword_set)
+                if matched_html_blocks:
+                    html_result = '<br>'.join(matched_html_blocks)
+                    row = [horse_name, len(match_]()
