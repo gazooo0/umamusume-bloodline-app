@@ -213,7 +213,7 @@ st.markdown("""
 <div style='line-height: 1.5; font-size: 0.8em; color: white;'>
 <b>負荷軽減のため、基本は「キャッシュを利用する」を選択してください。</b><br>
 キャッシュ情報がない場合は自動で情報を取得するように動きます。<br>
-自動取得の場合、順番に表示されるのでお待ちください。<br></div>
+自動取得の場合、順番に表示されるのでお待ちください。<br><br></div>
 """, unsafe_allow_html=True)
 
 # ✅ st.radio の後に値を取得してから使う
