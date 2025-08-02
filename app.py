@@ -166,7 +166,7 @@ schedule_df["日付"] = pd.to_datetime(
 
 today = pd.Timestamp.today()
 past_31 = today - pd.Timedelta(days=31)
-future_7 = today + pd.Timedelta(days=7)
+future_7 = today + pd.Timedelta(days=6)
 schedule_df = schedule_df[schedule_df["日付"].between(past_31, future_7)]
 
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
@@ -284,4 +284,5 @@ if search_state.get("triggered") and search_state.get("race_id") == race_id:
         if result_rows:
             df = pd.DataFrame(result_rows)
             save_cached_result(race_id, df)
+
 
