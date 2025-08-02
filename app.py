@@ -153,7 +153,12 @@ def save_cached_result(race_id, df):
         st.error(f"キャッシュ保存エラー: {e}")
 
 # === Streamlit UI ===
-st.title("ウマ娘血統🐎サーチ")
+st.title("ウマ娘血統サーチ")
+st.markdown("""
+<div style='line-height: 1.5; font-size: 0,8em; color: gray;'>
+Umamusume Bloodline Search<br><br>
+</div>
+""", unsafe_allow_html=True)
 schedule_df = pd.read_csv("jra_2025_keibabook_schedule.csv")
 schedule_df["日付"] = pd.to_datetime(
     schedule_df["年"].astype(str) + "/" + schedule_df["月日(曜日)"].str.extract(r"(\d{2}/\d{2})")[0],
@@ -279,3 +284,4 @@ if search_state.get("triggered") and search_state.get("race_id") == race_id:
         if result_rows:
             df = pd.DataFrame(result_rows)
             save_cached_result(race_id, df)
+
