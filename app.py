@@ -172,6 +172,10 @@ schedule_df = schedule_df[schedule_df["日付"].between(past_31, future_7)]
 dates = sorted(schedule_df["日付"].dt.strftime("%Y-%m-%d").unique(), reverse=True)
 st.markdown("### 📅 開催日を選択")
 selected_date = st.selectbox("（過去31日〜未来7日）", dates)
+st.markdown("""
+<div style='line-height: 1.5; font-size: 0,8em; color: gray;'>
+競馬開催日の場合、未来日が表示される可能性があるためご注意ください。</div>
+""", unsafe_allow_html=True)
 data_filtered = schedule_df[schedule_df["日付"].dt.strftime("%Y-%m-%d") == selected_date]
 
 st.markdown("### 🌎 競馬場を選択")
@@ -284,5 +288,6 @@ if search_state.get("triggered") and search_state.get("race_id") == race_id:
         if result_rows:
             df = pd.DataFrame(result_rows)
             save_cached_result(race_id, df)
+
 
 
